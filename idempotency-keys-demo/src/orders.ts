@@ -4,7 +4,7 @@ export type Order = {
   id: string;
   amount: number; // minor units, e.g. kobo
   currency: string;
-  status: "pending" | "paid";
+  status: "pending" | "paid" | "payment_unknown";
   paymentKey: string; // the Idempotency-Key for paying THIS order
   chargeId?: string;
 };
@@ -29,4 +29,14 @@ export const findOrder = (id: string) => orders.get(id);
 export function markPaid(order: Order, chargeId: string) {
   order.status = "paid";
   order.chargeId = chargeId;
+}
+
+export function markUnknown(order: Order) {
+  order.status = "payment_unknown"; // money MAY have moved. Check before charging again.
+}
+
+// Only call this once you KNOW nothing was charged with the old key
+export function resetForNewAttempt(order: Order) {
+  order.status = "pending";
+  order.paymentKey = randomUUID();
 }
